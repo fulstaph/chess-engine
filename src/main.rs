@@ -1,5 +1,5 @@
-pub mod piece;
+use engine::*;
 
 fn main() {
-    println!("Hello, world!");
+    println!("initial board state:\n{}", board::Board::new());
 }
