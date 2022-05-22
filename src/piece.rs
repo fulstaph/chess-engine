@@ -124,11 +124,15 @@ impl Piece {
         for direction in self.kind.directions() {
             // only one move up satisfies
             if direction.len() == 1 {
-                let file_mv = if self.color == Color::White { -1 } else { 1 };
+                let to_file = if self.color == Color::White {
+                    square.file - 1
+                } else {
+                    square.file + 1
+                };
 
                 let mv = Move {
                     from: (square.file, square.rank),
-                    to: (square.file + file_mv, square.rank),
+                    to: (to_file, square.rank),
                 };
                 // TODO: check that `to` square isn't occupied
                 moves.push(mv);
