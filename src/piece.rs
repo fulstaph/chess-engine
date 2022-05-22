@@ -120,24 +120,56 @@ impl Piece {
     }
 
     fn pawn_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
+        use Direction::*;
+
         let mut moves = Vec::new();
         for direction in self.kind.directions() {
+            let mut to_file: usize = 0;
+            let mut to_rank: usize = 0;
+
+            let white = self.color == Color::White;
+
             // only one move up satisfies
             if direction.len() == 1 {
-                let to_file = if self.color == Color::White {
-                    square.file - 1
-                } else {
+                to_file = if white {
                     square.file + 1
+                } else {
+                    square.file - 1
                 };
-
-                let mv = Move {
-                    from: (square.file, square.rank),
-                    to: (to_file, square.rank),
-                };
-                // TODO: check that `to` square isn't occupied
-                moves.push(mv);
             } else {
+                (to_file, to_rank) = match (direction[0], direction[1]) {
+                    (Up, Up) => {
+                        if white {
+                            (square.file + 2, square.rank)
+                        } else {
+                            (square.file - 2, square.rank)
+                        }
+                    }
+                    (Up, Left) => {
+                        if white {
+                            (square.file + 1, square.rank + 1)
+                        } else {
+                            (square.file - 1, square.rank - 1)
+                        }
+                    }
+                    (Up, Right) => {
+                        if white {
+                            (square.file + 1, square.rank - 1)
+                        } else {
+                            (square.file - 1, square.rank + 1)
+                        }
+                    }
+                    _ => (square.file, square.rank),
+                }
             }
+
+            let mv = Move {
+                from: (square.file, square.rank),
+                to: (to_file, to_rank),
+            };
+            // TODO: check that `to` square isn't occupied
+
+            moves.push(mv);
         }
         vec![]
     }
