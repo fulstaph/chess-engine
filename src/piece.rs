@@ -1,48 +1,69 @@
-use crate::board::Board;
 use crate::color::Color;
-use crate::r#move::Move;
-use crate::square::Square;
+use crate::direction::Direction;
+use crate::r#move::MoveGenerator;
 use core::fmt::{self, Display};
-use log::{debug, info};
 use std::fmt::Formatter;
 
+// Hack because for now Rust doesn't allow
+// to implement traits on enum variants.
+// And I haven't come up with a better idea.
 #[derive(Debug, Copy, Clone)]
-pub enum Direction {
-    Up,
-    Left,
-    Right,
-    Down,
-}
+pub struct Pawn {}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Knight {}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Bishop {}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Rook {}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Queen {}
+
+#[derive(Debug, Copy, Clone)]
+pub struct King {}
 
 #[derive(Debug, Copy, Clone)]
 pub enum PieceType {
-    Pawn,
-    Knight,
-    Bishop,
-    Rook,
-    Queen,
-    King,
+    Pawn(Pawn),
+    Knight(Knight),
+    Bishop(Bishop),
+    Rook(Rook),
+    Queen(Queen),
+    King(King),
 }
 
 impl PieceType {
     pub fn value(self) -> usize {
         match self {
-            PieceType::Pawn => 100,
-            PieceType::Knight => 280,
-            PieceType::Bishop => 320,
-            PieceType::Rook => 479,
-            PieceType::Queen => 929,
-            PieceType::King => 60000,
+            PieceType::Pawn(_) => 100,
+            PieceType::Knight(_) => 280,
+            PieceType::Bishop(_) => 320,
+            PieceType::Rook(_) => 479,
+            PieceType::Queen(_) => 929,
+            PieceType::King(_) => 60000,
+        }
+    }
+
+    pub fn move_generator(&self) -> Box<dyn MoveGenerator> {
+        match self {
+            PieceType::Pawn(_) => Box::new(Pawn {}),
+            PieceType::Knight(_) => Box::new(Knight {}),
+            PieceType::Bishop(_) => Box::new(Bishop {}),
+            PieceType::Rook(_) => Box::new(Rook {}),
+            PieceType::Queen(_) => Box::new(Queen {}),
+            PieceType::King(_) => Box::new(King {}),
         }
     }
 
     pub fn directions(self) -> Vec<Vec<Direction>> {
         use Direction::*;
-        use PieceType::*;
 
         match self {
-            Pawn => vec![vec![Up], vec![Up, Up], vec![Up, Left], vec![Up, Right]],
-            Knight => vec![
+            PieceType::Pawn(_) => vec![vec![Up], vec![Up, Up], vec![Up, Left], vec![Up, Right]],
+            PieceType::Knight(_) => vec![
                 vec![Up, Up, Left],
                 vec![Up, Up, Right],
                 vec![Left, Left, Up],
@@ -52,14 +73,14 @@ impl PieceType {
                 vec![Down, Down, Right],
                 vec![Down, Down, Left],
             ],
-            Bishop => vec![
+            PieceType::Bishop(_) => vec![
                 vec![Up, Left],
                 vec![Up, Right],
                 vec![Down, Left],
                 vec![Down, Right],
             ],
-            Rook => vec![vec![Up], vec![Down], vec![Left], vec![Right]],
-            Queen | King => vec![
+            PieceType::Rook(_) => vec![vec![Up], vec![Down], vec![Left], vec![Right]],
+            PieceType::Queen(_) | PieceType::King(_) => vec![
                 vec![Up],
                 vec![Up, Left],
                 vec![Up, Right],
@@ -79,12 +100,12 @@ impl Display for PieceType {
             f,
             "{}",
             match self {
-                PieceType::Pawn => "P",
-                PieceType::Knight => "N",
-                PieceType::Bishop => "B",
-                PieceType::Rook => "R",
-                PieceType::Queen => "Q",
-                PieceType::King => "K",
+                PieceType::Pawn(_) => "P",
+                PieceType::Knight(_) => "N",
+                PieceType::Bishop(_) => "B",
+                PieceType::Rook(_) => "R",
+                PieceType::Queen(_) => "Q",
+                PieceType::King(_) => "K",
             }
         )
     }
@@ -102,106 +123,6 @@ impl Piece {
             color: self.color.inverse(),
             kind: self.kind,
         }
-    }
-
-    /* TODO: passing the whole board and square
-        to a piece is cringe. Use some pattern like Strategy maybe?
-    */
-    pub fn moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        use PieceType::*;
-        match self.kind {
-            Pawn => self.pawn_moves(board, square),
-            Knight => self.knight_moves(board, square),
-            Bishop => self.bishop_moves(board, square),
-            Rook => self.rook_moves(board, square),
-            Queen => self.queen_moves(board, square),
-            King => self.king_moves(board, square),
-        }
-    }
-
-    fn pawn_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        use Direction::*;
-
-        let mut moves = Vec::new();
-        for direction in self.kind.directions() {
-            let mut to_file: usize = 0;
-            let mut to_rank: usize = 0;
-
-            let white = self.color == Color::White;
-
-            // only one move up satisfies
-            if direction.len() == 1 {
-                to_file = if white {
-                    square.file + 1
-                } else {
-                    square.file - 1
-                };
-            } else {
-                (to_file, to_rank) = match (direction[0], direction[1]) {
-                    (Up, Up) => {
-                        if white {
-                            (square.file + 2, square.rank)
-                        } else {
-                            (square.file - 2, square.rank)
-                        }
-                    }
-                    (Up, Left) => {
-                        if white {
-                            (square.file + 1, square.rank + 1)
-                        } else {
-                            (square.file - 1, square.rank - 1)
-                        }
-                    }
-                    (Up, Right) => {
-                        if white {
-                            (square.file + 1, square.rank - 1)
-                        } else {
-                            (square.file - 1, square.rank + 1)
-                        }
-                    }
-                    _ => (square.file, square.rank),
-                }
-            }
-
-            let mv = Move {
-                from: (square.file, square.rank),
-                to: (to_file, to_rank),
-            };
-            // TODO: check that `to` square isn't occupied
-
-            moves.push(mv);
-        }
-        vec![]
-    }
-
-    fn knight_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn bishop_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn rook_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn queen_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn king_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
     }
 }
 
@@ -226,9 +147,8 @@ impl Display for Piece {
 #[cfg(test)]
 mod tests {
     use super::PieceType;
-
-    #[test]
-    fn piece_move_directions_are_valid() {
-        dbg!(PieceType::Rook.directions());
-    }
+    use crate::board::Board;
+    use crate::color::Color::White;
+    use crate::piece::{Pawn, Piece};
+    use crate::square::Square;
 }

@@ -5,22 +5,25 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
-    pub color: Color,
-    pub piece: Option<Piece>,
     pub file: usize,
     pub rank: usize,
+    pub piece: Option<Piece>,
 }
 
 impl Square {
-    pub fn new(color: Color, piece: Option<Piece>, file: usize, rank: usize) -> Self {
-        Square {
-            color,
-            piece,
-            file,
-            rank,
+    pub fn new(file: usize, rank: usize, piece: Option<Piece>) -> Self {
+        Square { piece, file, rank }
+    }
+
+    pub fn get_color(&self) -> Color {
+        if (self.file + self.rank) % 2 == 0 {
+            Color::White
+        } else {
+            Color::Black
         }
     }
 }
+
 impl Display for Square {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
@@ -28,7 +31,7 @@ impl Display for Square {
             "{}",
             if let Some(piece) = self.piece {
                 piece.to_string()
-            } else if self.color == Color::White {
+            } else if self.get_color() == Color::White {
                 String::from("O")
             } else {
                 String::from("X")
@@ -40,7 +43,7 @@ impl Display for Square {
 #[cfg(test)]
 mod tests {
     use crate::color::Color;
-    use crate::piece::{Piece, PieceType};
+    use crate::piece::{King, Piece, PieceType, Queen};
     use crate::square::Square;
 
     #[test]
@@ -48,33 +51,29 @@ mod tests {
         let expected_str_representations = vec!["K", "O", "X", "q"];
         let squares = vec![
             Square {
-                color: Color::White,
                 piece: Some(Piece {
                     color: Color::White,
-                    kind: PieceType::King,
+                    kind: PieceType::King(King {}),
                 }),
                 rank: 0,
                 file: 0,
             },
             Square {
-                color: Color::White,
                 piece: None,
                 rank: 0,
                 file: 0,
             },
             Square {
-                color: Color::Black,
                 piece: None,
-                rank: 0,
+                rank: 1,
                 file: 0,
             },
             Square {
-                color: Color::White,
                 piece: Some(Piece {
                     color: Color::Black,
-                    kind: PieceType::Queen,
+                    kind: PieceType::Queen(Queen {}),
                 }),
-                rank: 0,
+                rank: 1,
                 file: 0,
             },
         ];

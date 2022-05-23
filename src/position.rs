@@ -9,13 +9,13 @@ pub struct Position {
 
 impl Position {
     pub fn moves(&self) -> Vec<Move> {
-        let mut moves: Vec<Move> = vec![];
+        let mut moves = vec![];
 
         for (_, file) in self.board.files() {
             for square in file.iter() {
                 dbg!(square);
                 if let Some(piece) = square.piece {
-                    moves.append(&mut piece.moves(&self.board, square));
+                    moves.append(&mut piece.kind.move_generator().moves(square, &self.board));
                 }
             }
         }
@@ -35,10 +35,6 @@ impl Default for Position {
 
 #[cfg(test)]
 mod tests {
-    use crate::position::Position;
-
     #[test]
-    fn going_through_all_squares_on_the_board() {
-        Position::default().moves();
-    }
+    fn getting_correct_first_moves_for_whites() {}
 }

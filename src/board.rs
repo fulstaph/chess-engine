@@ -1,5 +1,5 @@
 use crate::color::Color;
-use crate::piece::{Piece, PieceType};
+use crate::piece::{Bishop, King, Knight, Pawn, Piece, PieceType, Queen, Rook};
 use crate::square::Square;
 use std::fmt;
 use std::fmt::Display;
@@ -17,49 +17,37 @@ pub struct Board {
 }
 
 impl Board {
-    // TODO: try to shorten this
     pub fn new() -> Board {
         let mut board = Self::default();
 
-        let white_rank_pieces = vec![
-            PieceType::Rook,
-            PieceType::Knight,
-            PieceType::Bishop,
-            PieceType::Queen,
-            PieceType::King,
-            PieceType::Bishop,
-            PieceType::Knight,
-            PieceType::Rook,
-        ];
-
-        let black_rank_pieces = vec![
-            PieceType::Rook,
-            PieceType::Knight,
-            PieceType::Bishop,
-            PieceType::Queen,
-            PieceType::King,
-            PieceType::Bishop,
-            PieceType::Knight,
-            PieceType::Rook,
+        let first_rank_pieces = vec![
+            PieceType::Rook(Rook {}),
+            PieceType::Knight(Knight {}),
+            PieceType::Bishop(Bishop {}),
+            PieceType::Queen(Queen {}),
+            PieceType::King(King {}),
+            PieceType::Bishop(Bishop {}),
+            PieceType::Knight(Knight {}),
+            PieceType::Rook(Rook {}),
         ];
 
         for file in 0..board.inner.len() {
             board.inner[FIRST_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::White,
-                kind: white_rank_pieces[file],
+                kind: first_rank_pieces[file],
             });
             board.inner[SECOND_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::White,
-                kind: PieceType::Pawn,
+                kind: PieceType::Pawn(Pawn {}),
             });
 
             board.inner[SEVENTH_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::Black,
-                kind: PieceType::Pawn,
+                kind: PieceType::Pawn(Pawn {}),
             });
             board.inner[EIGHT_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::Black,
-                kind: black_rank_pieces[file],
+                kind: first_rank_pieces[first_rank_pieces.len() - file - 1],
             });
         }
 
@@ -90,7 +78,6 @@ impl Default for Board {
     fn default() -> Self {
         let mut board = Board {
             inner: [[Square {
-                color: Color::White,
                 piece: None,
                 rank: 0,
                 file: 0,
@@ -100,11 +87,6 @@ impl Default for Board {
         for file in 0..board.inner.len() {
             for rank in 0..board.inner.len() {
                 board.inner[file][rank] = Square {
-                    color: if (file + rank) % 2 == 0 {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
                     piece: None,
                     rank,
                     file,
@@ -158,7 +140,7 @@ mod tests {
     #[test]
     fn initial_board_state_has_correct_string_representation() {
         let board_initial_state =
-            r#"RNBQKBNR|PPPPPPPP|OXOXOXOX|XOXOXOXO|OXOXOXOX|XOXOXOXO|pppppppp|rnbqkbnr"#
+            r#"RNBQKBNR|PPPPPPPP|OXOXOXOX|XOXOXOXO|OXOXOXOX|XOXOXOXO|pppppppp|rnbkqbnr"#
                 .to_string();
 
         assert_eq!(
@@ -175,7 +157,7 @@ mod tests {
     #[test]
     fn board_is_flipped_correctly() {
         let board_reversed =
-            r#"RNBQKBNR|PPPPPPPP|OXOXOXOX|XOXOXOXO|OXOXOXOX|XOXOXOXO|pppppppp|rnbqkbnr"#
+            r#"RNBQKBNR|PPPPPPPP|OXOXOXOX|XOXOXOXO|OXOXOXOX|XOXOXOXO|pppppppp|rnbkqbnr"#
                 .to_string()
                 .chars()
                 .rev()
