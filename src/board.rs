@@ -1,8 +1,9 @@
 use crate::color::Color;
-use crate::piece::{Bishop, King, Knight, Pawn, Piece, PieceType, Queen, Rook};
+use crate::piece::{Piece, PieceType};
 use crate::square::Square;
 use std::fmt;
 use std::fmt::Display;
+use std::ops::Index;
 
 // constants used to arrange white pieces
 const FIRST_RANK_INDEX: usize = 0;
@@ -21,14 +22,14 @@ impl Board {
         let mut board = Self::default();
 
         let first_rank_pieces = vec![
-            PieceType::Rook(Rook {}),
-            PieceType::Knight(Knight {}),
-            PieceType::Bishop(Bishop {}),
-            PieceType::Queen(Queen {}),
-            PieceType::King(King {}),
-            PieceType::Bishop(Bishop {}),
-            PieceType::Knight(Knight {}),
-            PieceType::Rook(Rook {}),
+            PieceType::Rook,
+            PieceType::Knight,
+            PieceType::Bishop,
+            PieceType::Queen,
+            PieceType::King,
+            PieceType::Bishop,
+            PieceType::Knight,
+            PieceType::Rook,
         ];
 
         for file in 0..board.inner.len() {
@@ -38,12 +39,12 @@ impl Board {
             });
             board.inner[SECOND_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::White,
-                kind: PieceType::Pawn(Pawn {}),
+                kind: PieceType::Pawn,
             });
 
             board.inner[SEVENTH_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::Black,
-                kind: PieceType::Pawn(Pawn {}),
+                kind: PieceType::Pawn,
             });
             board.inner[EIGHT_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::Black,
@@ -71,6 +72,14 @@ impl Board {
             .iter()
             .enumerate()
             .map(|(idx, square)| (idx, square))
+    }
+}
+
+impl Index<[usize; 2]> for Board {
+    type Output = Square;
+
+    fn index(&self, index: [usize; 2]) -> &Self::Output {
+        &self.inner[index[0]][index[1]]
     }
 }
 

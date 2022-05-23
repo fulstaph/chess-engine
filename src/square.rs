@@ -1,7 +1,9 @@
 use crate::color::Color;
+use crate::direction::MoveOffset;
 use crate::piece::Piece;
 use std::fmt;
 use std::fmt::{format, Display, Formatter};
+use std::ops::Add;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
@@ -40,6 +42,14 @@ impl Square {
 
         format!("{}{}", rank_letter, file_number)
     }
+
+    pub fn move_to(&self, offset: MoveOffset) -> Self {
+        Self {
+            file: (self.file as i8 + offset.0) as usize,
+            rank: (self.rank as i8 + offset.1) as usize,
+            piece: self.piece,
+        }
+    }
 }
 
 impl Display for Square {
@@ -61,7 +71,7 @@ impl Display for Square {
 #[cfg(test)]
 mod tests {
     use crate::color::Color;
-    use crate::piece::{King, Piece, PieceType, Queen};
+    use crate::piece::{Piece, PieceType};
     use crate::square::Square;
 
     #[test]
@@ -71,7 +81,7 @@ mod tests {
             Square {
                 piece: Some(Piece {
                     color: Color::White,
-                    kind: PieceType::King(King {}),
+                    kind: PieceType::King,
                 }),
                 rank: 0,
                 file: 0,
@@ -89,7 +99,7 @@ mod tests {
             Square {
                 piece: Some(Piece {
                     color: Color::Black,
-                    kind: PieceType::Queen(Queen {}),
+                    kind: PieceType::Queen,
                 }),
                 rank: 1,
                 file: 0,
