@@ -6,7 +6,7 @@ use std::fmt::Formatter;
 
 // Hack because for now Rust doesn't allow
 // to implement traits on enum variants.
-// And I haven't come up with a better idea.
+// And I haven't come up with a better idea *yet*.
 #[derive(Debug, Copy, Clone)]
 pub struct Pawn {}
 
@@ -145,10 +145,4 @@ impl Display for Piece {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::PieceType;
-    use crate::board::Board;
-    use crate::color::Color::White;
-    use crate::piece::{Pawn, Piece};
-    use crate::square::Square;
-}
+mod tests {}

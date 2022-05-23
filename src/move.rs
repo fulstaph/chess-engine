@@ -23,11 +23,11 @@ impl MoveGenerator for Pawn {
             let mut to_file: usize = square.file;
             let mut to_rank: usize = square.rank;
 
-            let white = square.piece.unwrap().color == Color::White;
+            let is_white = square.piece.unwrap().color == Color::White;
 
             // only one move up satisfies
             if direction.len() == 1 {
-                to_file = if white {
+                to_file = if is_white {
                     square.file + 1
                 } else {
                     square.file - 1
@@ -35,21 +35,21 @@ impl MoveGenerator for Pawn {
             } else {
                 (to_file, to_rank) = match (direction[0], direction[1]) {
                     (Up, Up) => {
-                        if white {
+                        if is_white {
                             (square.file + 2, square.rank)
                         } else {
                             (square.file - 2, square.rank)
                         }
                     }
                     (Up, Left) => {
-                        if white {
+                        if is_white {
                             (square.file + 1, square.rank + 1)
                         } else {
                             (square.file - 1, square.rank - 1)
                         }
                     }
                     (Up, Right) => {
-                        if white {
+                        if is_white {
                             (square.file + 1, square.rank - 1)
                         } else {
                             (square.file - 1, square.rank + 1)
@@ -61,7 +61,11 @@ impl MoveGenerator for Pawn {
 
             let mv = Move {
                 from: *square,
-                to: *square,
+                to: Square {
+                    file: to_file,
+                    rank: to_rank,
+                    piece: None,
+                },
             };
 
             // TODO:
@@ -105,4 +109,10 @@ impl MoveGenerator for King {
     fn moves(&self, square: &Square, board: &Board) -> Vec<Move> {
         todo!()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn kings_pawn_first_moves_are_correct() {}
 }

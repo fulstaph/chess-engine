@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::piece::Piece;
 use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::fmt::{format, Display, Formatter};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
@@ -21,6 +21,24 @@ impl Square {
         } else {
             Color::Black
         }
+    }
+
+    pub fn get_square_string(&self) -> String {
+        let rank_letter = match self.rank {
+            0 => 'a',
+            1 => 'b',
+            2 => 'c',
+            3 => 'd',
+            4 => 'e',
+            5 => 'f',
+            6 => 'g',
+            7 => 'h',
+            _ => ' ',
+        };
+
+        let file_number = self.file + 1;
+
+        format!("{}{}", rank_letter, file_number)
     }
 }
 
