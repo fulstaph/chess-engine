@@ -96,7 +96,10 @@ mod test {
 
         for direction in rook_directions {
             let res_sq = rook_sq.move_to(*direction);
-            println!("can move to square: {}", res_sq.get_square_string());
+            println!(
+                "can move to square: {}",
+                res_sq.unwrap().get_square_string()
+            );
 
             possible_squares.push(res_sq);
         }
@@ -104,7 +107,7 @@ mod test {
         assert_eq!(
             possible_squares
                 .iter()
-                .map(|sq| sq.get_square_string())
+                .map(|sq| sq.unwrap().get_square_string())
                 .collect::<Vec<String>>()
                 .iter()
                 .collect::<HashSet<_>>(),
@@ -147,7 +150,10 @@ mod test {
 
         for direction in rook_directions {
             let res_sq = bishop_sq.move_to(*direction);
-            println!("can move to square: {}", res_sq.get_square_string());
+            println!(
+                "can move to square: {}",
+                res_sq.unwrap().get_square_string()
+            );
 
             possible_squares.push(res_sq);
         }
@@ -155,7 +161,7 @@ mod test {
         assert_eq!(
             possible_squares
                 .iter()
-                .map(|sq| sq.get_square_string())
+                .map(|sq| sq.unwrap().get_square_string())
                 .collect::<Vec<String>>()
                 .iter()
                 .collect::<HashSet<_>>(),

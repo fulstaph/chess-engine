@@ -3,13 +3,18 @@ use crate::direction::MoveOffset;
 use crate::piece::Piece;
 use std::fmt;
 use std::fmt::{format, Display, Formatter};
-use std::ops::Add;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
     pub file: usize,
     pub rank: usize,
     pub piece: Option<Piece>,
+}
+
+impl PartialEq for Square {
+    fn eq(&self, other: &Self) -> bool {
+        self.file == other.file && self.rank == other.rank
+    }
 }
 
 impl Square {
@@ -43,12 +48,20 @@ impl Square {
         format!("{}{}", rank_letter, file_number)
     }
 
-    pub fn move_to(&self, offset: MoveOffset) -> Self {
-        Self {
-            file: (self.file as i8 + offset.0) as usize,
-            rank: (self.rank as i8 + offset.1) as usize,
-            piece: self.piece,
+    pub fn move_to(&self, offset: MoveOffset) -> Option<Self> {
+        // check if the resulting square is in board bounds
+        let file = self.file as i8 + offset.0;
+        let rank = self.rank as i8 + offset.1;
+
+        if !(0..8).contains(&file) || !(0..8).contains(&rank) {
+            return None;
         }
+
+        Some(Self {
+            file: file as usize,
+            rank: rank as usize,
+            piece: None,
+        })
     }
 }
 
@@ -71,8 +84,24 @@ impl Display for Square {
 #[cfg(test)]
 mod tests {
     use crate::color::Color;
+    use crate::color::Color::{Black, White};
+    use crate::piece::PieceType::Bishop;
     use crate::piece::{Piece, PieceType};
     use crate::square::Square;
+
+    #[test]
+    fn trying_to_move_out_of_board_returns_none() {
+        let test_square = Square {
+            file: 0,
+            rank: 0,
+            piece: Some(Piece {
+                kind: Bishop,
+                color: Black,
+            }),
+        };
+
+        assert!(test_square.move_to((-1, -1)).is_none());
+    }
 
     #[test]
     fn squares_have_correct_string_representation() {

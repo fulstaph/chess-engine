@@ -14,7 +14,7 @@ const EIGHT_RANK_INDEX: usize = 7;
 
 #[derive(Debug, Clone)]
 pub struct Board {
-    inner: [[Square; 8]; 8],
+    pub inner: [[Square; 8]; 8],
 }
 
 impl Board {

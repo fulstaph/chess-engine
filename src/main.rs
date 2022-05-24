@@ -1,5 +1,11 @@
+use engine::position::Position;
 use engine::*;
+use log::info;
 
 fn main() {
-    println!("initial board state:\n{}", board::Board::new());
+    env_logger::init();
+
+    info!("initial board state:\n{}\n", board::Board::new());
+
+    Position::default().moves();
 }

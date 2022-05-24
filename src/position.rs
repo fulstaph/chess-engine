@@ -1,8 +1,9 @@
 use crate::board::Board;
 use crate::color::Color;
 use crate::direction::DIRECTIONS;
-use crate::r#move::Move;
-use std::borrow::Borrow;
+use crate::r#move::{Move, Moves};
+use log::debug;
+use std::borrow::{Borrow, BorrowMut};
 
 pub enum Castling {
     Queenside,
@@ -30,30 +31,54 @@ impl Position {
     pub fn moves(&self) -> Vec<Move> {
         let mut moves = vec![];
 
-        for (_, file) in self.board.files() {
-            for square in file.iter() {
-                dbg!(square);
-                if let Some(piece) = square.piece {
-                    let directions = &DIRECTIONS[piece.kind.borrow()];
-                    dbg!(directions);
+        let cur_color = self.turn();
 
-                    let mut piece_moves = vec![];
-                    for direction in directions {
-                        let new_sq = square.move_to(*direction);
-                        dbg!(new_sq);
+        for square in self.board.inner.iter().flat_map(|arr| arr.iter()) {
+            if let Some(piece) = square.piece {
+                if piece.color != cur_color {
+                    continue;
+                }
+                debug!(
+                    "looking for moves for piece {} from square {}",
+                    piece,
+                    square.get_square_string()
+                );
 
+                let directions = &DIRECTIONS[piece.kind.borrow()];
+
+                // find all possible squares that are on the board
+                let mut piece_moves = vec![];
+                for direction in directions {
+                    if let Some(new_sq) = square.move_to(*direction) {
                         piece_moves.push(Move {
-                            from: square.clone(),
+                            from: *square,
                             to: new_sq,
                         });
                     }
-
-                    moves.append(&mut piece_moves);
                 }
+
+                debug!("all possible moves: {}", Moves(piece_moves.clone()));
+
+                // remove moves to squares occupied by other pieces
+                let mut piece_moves = piece_moves
+                    .into_iter()
+                    // filter out moves to squares occupied by pieces of the same color
+                    .filter(|mv| {
+                        let to = self.board[[mv.to.file, mv.to.rank]];
+
+                        if let Some(piece) = to.piece {
+                            return piece.color != cur_color;
+                        }
+
+                        true
+                    })
+                    .collect();
+
+                moves.append(&mut piece_moves);
             }
         }
 
-        dbg!(&moves);
+        debug!("found {} moves: {}", moves.len(), Moves(moves.clone()));
         moves
     }
 }
@@ -73,9 +98,16 @@ impl Default for Position {
 #[cfg(test)]
 mod tests {
     use crate::position::Position;
+    use log::info;
+
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
 
     #[test]
     fn all_first_moves_for_whites_are_correct() {
+        init();
+        info!("This record will be captured by `cargo test`");
         Position::default().moves();
     }
 }
