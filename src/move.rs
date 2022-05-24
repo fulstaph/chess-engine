@@ -1,7 +1,3 @@
-use crate::color::Color;
-use crate::direction::MoveOffset;
-use crate::piece::PieceType;
-use crate::position::Position;
 use crate::square::Square;
 use std::fmt::{Display, Formatter};
 
