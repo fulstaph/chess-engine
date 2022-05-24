@@ -1,7 +1,7 @@
 use crate::board::Board;
 use crate::color::Color;
 use crate::direction::DIRECTIONS;
-use crate::piece::PieceType::Pawn;
+use crate::piece::PieceType;
 use crate::r#move::{Move, Moves};
 use log::debug;
 use std::borrow::{Borrow, BorrowMut};
@@ -75,11 +75,14 @@ impl Position {
                     // filter out diagonal moves for pawns if there's no capture possibility
                     .filter(|mv| {
                         let to = self.board[[mv.to.file, mv.to.rank]];
-                        // if diagonal move by pawn
-                        if piece.kind == Pawn && (mv.to.rank as i8 - mv.from.rank as i8) == 0 {
-                            return to.piece.is_none();
+
+                        match mv.from.piece.unwrap().kind {
+                            PieceType::Pawn => {
+                                (mv.from.rank as i8 - to.rank as i8) == 0 && to.piece.is_none()
+                            }
+                            PieceType::Knight => true,
+                            _ => false,
                         }
-                        false
                     })
                     .collect();
 
