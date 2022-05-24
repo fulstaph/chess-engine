@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::direction::MoveOffset;
 use crate::piece::Piece;
+use crate::r#move::MoveGenerator;
 use std::fmt;
 use std::fmt::{format, Display, Formatter};
 use std::ops::Add;

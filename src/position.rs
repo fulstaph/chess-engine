@@ -1,6 +1,8 @@
 use crate::board::Board;
 use crate::color::Color;
+use crate::direction::DIRECTIONS;
 use crate::r#move::Move;
+use std::borrow::Borrow;
 
 pub enum Castling {
     Queenside,
@@ -32,7 +34,8 @@ impl Position {
             for square in file.iter() {
                 dbg!(square);
                 if let Some(piece) = square.piece {
-                    // moves.append(&mut piece.kind.move_generator().moves(square, self));
+                    let directions = &DIRECTIONS[piece.kind.borrow()];
+                    dbg!(directions);
                 }
             }
         }
@@ -55,6 +58,10 @@ impl Default for Position {
 
 #[cfg(test)]
 mod tests {
+    use crate::position::Position;
+
     #[test]
-    fn getting_correct_first_moves_for_whites() {}
+    fn all_first_moves_for_whites_are_correct() {
+        Position::default().moves();
+    }
 }
