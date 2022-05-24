@@ -36,10 +36,24 @@ impl Position {
                 if let Some(piece) = square.piece {
                     let directions = &DIRECTIONS[piece.kind.borrow()];
                     dbg!(directions);
+
+                    let mut piece_moves = vec![];
+                    for direction in directions {
+                        let new_sq = square.move_to(*direction);
+                        dbg!(new_sq);
+
+                        piece_moves.push(Move {
+                            from: square.clone(),
+                            to: new_sq,
+                        });
+                    }
+
+                    moves.append(&mut piece_moves);
                 }
             }
         }
 
+        dbg!(&moves);
         moves
     }
 }
