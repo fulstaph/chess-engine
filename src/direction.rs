@@ -1,69 +1,114 @@
-use crate::piece::{Piece, PieceType};
 use crate::square::Square;
-use lazy_static::lazy_static;
-use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
+
+/// `MovesFinder` returns all possible moves from a given square
+pub struct MovesFinder {
+    from: Square,
+}
+
+impl MovesFinder {
+    pub fn list(&self) -> Moves {
+        Moves(Vec::new())
+    }
+
+    pub fn new(from: Square) -> Self {
+        Self { from }
+    }
+}
 
 pub type MoveOffset = (i8, i8);
 
-lazy_static! {
-    pub static ref DIRECTIONS: HashMap<PieceType, Vec<MoveOffset>> = {
-        let mut map = HashMap::new();
+pub enum Direction {
+    Ray(RayDirection),
+    Knight(KnightDirection),
+}
 
-        map.insert(PieceType::Pawn, vec![(1, 0), (2, 0), (1, 1), (1, -1)]);
-        map.insert(
-            PieceType::Knight,
-            vec![
-                (1, 2),
-                (1, -2),
-                (2, 1),
-                (2, -1),
-                (-1, 2),
-                (-1, -2),
-                (-2, 1),
-                (-2, -1),
-            ],
-        );
-        map.insert(PieceType::Bishop, vec![(1, 1), (1, -1), (-1, 1), (-1, -1)]);
-        map.insert(PieceType::Rook, vec![(1, 0), (0, 1), (-1, 0), (0, -1)]);
-        map.insert(
-            PieceType::Queen,
-            vec![
-                (1, 0),
-                (1, 1),
-                (1, -1),
-                (0, 1),
-                (0, -1),
-                (-1, 0),
-                (-1, 1),
-                (-1, -1),
-            ],
-        );
-        map.insert(
-            PieceType::King,
-            vec![
-                (1, 0),
-                (1, 1),
-                (1, -1),
-                (0, 1),
-                (0, -1),
-                (-1, 0),
-                (-1, 1),
-                (-1, -1),
-            ],
-        );
+pub enum KnightDirection {
+    NorthNorthWest,
+    NorthNorthEast,
+    NorthEastEast,
+    SouthEastEast,
+    SouthSouthEast,
+    SouthSouthWest,
+    SouthWestWest,
+    NorthWestWest,
+}
 
-        map
-    };
+impl KnightDirection {
+    fn offset(&self) -> MoveOffset {
+        use KnightDirection::*;
+        match self {
+            NorthNorthWest => (2, 1),
+            NorthNorthEast => (2, -1),
+            NorthEastEast => (1, -2),
+            SouthEastEast => (-1, -2),
+            SouthSouthEast => (-2, -1),
+            SouthSouthWest => (-2, 1),
+            SouthWestWest => (-1, 2),
+            NorthWestWest => (1, 2),
+        }
+    }
+}
+
+pub enum RayDirection {
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest,
+}
+
+impl RayDirection {
+    fn offset(&self) -> MoveOffset {
+        use RayDirection::*;
+        match self {
+            North => (1, 0),
+            NorthEast => (1, 1),
+            East => (0, 1),
+            SouthEast => (-1, 1),
+            South => (-1, 0),
+            SouthWest => (-1, -1),
+            West => (0, -1),
+            NorthWest => (1, -1),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Move {
+    pub from: Square,
+    pub to: Square,
+}
+
+impl Display for Move {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}-{}",
+            self.from.get_square_string(),
+            self.to.get_square_string()
+        )
+    }
+}
+
+pub struct Moves(pub Vec<Move>);
+impl Display for Moves {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.0
+            .iter()
+            .fold(Ok(()), |result, mv| {
+                result.and_then(|_| write!(f, "{} ", mv))
+            })
+            .expect("TODO: panic message");
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::color::Color;
-    use crate::direction::DIRECTIONS;
-    use crate::piece::{Piece, PieceType};
-    use crate::square::Square;
-    use std::collections::HashSet;
-
     // TODO: refactor to use table driven testing here.
     #[test]
     fn pawn_move_directions_are_correct() {}
@@ -78,94 +123,8 @@ mod test {
     fn king_move_directions_are_correct() {}
 
     #[test]
-    fn rook_move_directions_are_correct() {
-        let rook_sq = Square::new(
-            3,
-            4,
-            Some(Piece {
-                kind: PieceType::Rook,
-                color: Color::White,
-            }),
-        );
-
-        println!("white rook on the square: {}", rook_sq.get_square_string());
-
-        let rook_directions = &DIRECTIONS[&PieceType::Rook];
-
-        let mut possible_squares = vec![];
-
-        for direction in rook_directions {
-            let res_sq = rook_sq.move_to(*direction);
-            println!(
-                "can move to square: {}",
-                res_sq.unwrap().get_square_string()
-            );
-
-            possible_squares.push(res_sq);
-        }
-
-        assert_eq!(
-            possible_squares
-                .iter()
-                .map(|sq| sq.unwrap().get_square_string())
-                .collect::<Vec<String>>()
-                .iter()
-                .collect::<HashSet<_>>(),
-            Vec::from(vec![
-                "e5".to_string(),
-                "f4".to_string(),
-                "e3".to_string(),
-                "d4".to_string()
-            ])
-            .iter()
-            .collect::<HashSet<_>>()
-        );
-    }
+    fn rook_move_directions_are_correct() {}
 
     #[test]
-    fn bishop_move_directions_are_correct() {
-        let mut expected_directions = Vec::new();
-        expected_directions.push(String::from("d5"));
-        expected_directions.push(String::from("d3"));
-        expected_directions.push(String::from("f5"));
-        expected_directions.push(String::from("f3"));
-
-        let bishop_sq = Square::new(
-            3,
-            4,
-            Some(Piece {
-                kind: PieceType::Bishop,
-                color: Color::White,
-            }),
-        );
-
-        println!(
-            "white bishop on the square: {}",
-            bishop_sq.get_square_string()
-        );
-
-        let rook_directions = &DIRECTIONS[&PieceType::Bishop];
-
-        let mut possible_squares = vec![];
-
-        for direction in rook_directions {
-            let res_sq = bishop_sq.move_to(*direction);
-            println!(
-                "can move to square: {}",
-                res_sq.unwrap().get_square_string()
-            );
-
-            possible_squares.push(res_sq);
-        }
-
-        assert_eq!(
-            possible_squares
-                .iter()
-                .map(|sq| sq.unwrap().get_square_string())
-                .collect::<Vec<String>>()
-                .iter()
-                .collect::<HashSet<_>>(),
-            expected_directions.iter().collect::<HashSet<_>>()
-        );
-    }
+    fn bishop_move_directions_are_correct() {}
 }

@@ -1,10 +1,9 @@
 use crate::board::Board;
 use crate::color::Color;
-use crate::direction::DIRECTIONS;
+use crate::direction::{Move, Moves, MovesFinder};
 use crate::piece::PieceType;
-use crate::r#move::{Move, Moves};
 use log::debug;
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::Borrow;
 
 pub enum Castling {
     Queenside,
@@ -22,76 +21,28 @@ pub struct Position {
 
 impl Position {
     pub fn turn(&self) -> Color {
-        if self.turn % 2 == 1 {
+        if self.turn % 2 == 0 {
             Color::White
         } else {
             Color::Black
         }
     }
 
-    pub fn moves(&self) -> Vec<Move> {
+    // returns all valid moves
+    pub fn moves(&self) -> Moves {
         let mut moves = vec![];
 
         let cur_color = self.turn();
 
-        for square in self.board.inner.iter().flat_map(|arr| arr.iter()) {
-            if let Some(piece) = square.piece {
-                if piece.color != cur_color {
-                    continue;
-                }
-                debug!(
-                    "looking for moves for piece {} from square {}",
-                    piece,
-                    square.get_square_string()
-                );
-
-                let directions = &DIRECTIONS[piece.kind.borrow()];
-
-                // find all possible squares that are on the board
-                let mut piece_moves = vec![];
-                for direction in directions {
-                    if let Some(new_sq) = square.move_to(*direction) {
-                        piece_moves.push(Move {
-                            from: *square,
-                            to: new_sq,
-                        });
-                    }
-                }
-
-                debug!("all possible moves: {}", Moves(piece_moves.clone()));
-
-                let mut piece_moves = piece_moves
-                    .into_iter()
-                    // filter out moves to squares occupied by pieces of the same color
-                    .filter(|mv| {
-                        let to = self.board[[mv.to.file, mv.to.rank]];
-
-                        if let Some(piece) = to.piece {
-                            return piece.color != cur_color;
-                        }
-
-                        true
-                    })
-                    // filter out diagonal moves for pawns if there's no capture possibility
-                    .filter(|mv| {
-                        let to = self.board[[mv.to.file, mv.to.rank]];
-
-                        match mv.from.piece.unwrap().kind {
-                            PieceType::Pawn => {
-                                (mv.from.rank as i8 - to.rank as i8) == 0 && to.piece.is_none()
-                            }
-                            PieceType::Knight => true,
-                            _ => false,
-                        }
-                    })
-                    .collect();
-
-                moves.append(&mut piece_moves);
-            }
+        for square in self.board.flattened_iter() {
+            let mut all_possible_moves = MovesFinder::new(*square).list();
         }
 
-        debug!("found {} moves: {}", moves.len(), Moves(moves.clone()));
-        moves
+        Moves(moves)
+    }
+
+    pub fn from_fen(fen: &str) -> Self {
+        Position::default()
     }
 }
 
@@ -109,7 +60,12 @@ impl Default for Position {
 
 #[cfg(test)]
 mod tests {
+    use crate::board::Board;
+    use crate::color::Color;
+    use crate::direction::Moves;
+    use crate::piece::{Piece, PieceType};
     use crate::position::Position;
+    use crate::square::Square;
     use log::info;
 
     fn init() {
@@ -121,5 +77,33 @@ mod tests {
         init();
         info!("This record will be captured by `cargo test`");
         Position::default().moves();
+    }
+
+    #[test]
+    fn pawns_cant_move_two_squares_from_non_home_rows() {
+        let mut board = Board::default();
+
+        board.inner[2][0].piece = Some(Piece {
+            kind: PieceType::Pawn,
+            color: Color::White,
+        });
+
+        println!(
+            "put white pawn on square {}",
+            board.inner[2][0].get_square_string()
+        );
+        println!("board:\n{}", board);
+
+        let p = Position {
+            board,
+            score: 0,
+            turn: 1,
+            white_castling: vec![],
+            black_castling: vec![],
+        };
+
+        let moves = p.moves();
+
+        println!("{}", moves);
     }
 }

@@ -2,7 +2,7 @@ use crate::color::Color;
 use crate::direction::MoveOffset;
 use crate::piece::Piece;
 use std::fmt;
-use std::fmt::{format, Display, Formatter};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
@@ -73,9 +73,9 @@ impl Display for Square {
             if let Some(piece) = self.piece {
                 piece.to_string()
             } else if self.get_color() == Color::White {
-                String::from("O")
+                String::from("□")
             } else {
-                String::from("X")
+                String::from("■")
             }
         )
     }
