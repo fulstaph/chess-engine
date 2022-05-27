@@ -42,7 +42,7 @@ impl Display for PieceType {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub struct Piece {
     pub kind: PieceType,
     pub color: Color,

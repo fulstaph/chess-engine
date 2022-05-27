@@ -56,8 +56,8 @@ impl Square {
         }
 
         Some(Self {
-            file: self.file + offset.0 as usize,
-            rank: self.rank + offset.1 as usize,
+            file: (self.file as i8 + offset.0) as usize,
+            rank: (self.rank as i8 + offset.1) as usize,
             piece: None,
         })
     }

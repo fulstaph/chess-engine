@@ -1,4 +1,5 @@
 use crate::piece::PieceType;
+use crate::piece::PieceType::Pawn;
 use crate::square::Square;
 use enum_iterator::IntoEnumIterator;
 use std::fmt::{Display, Formatter};
@@ -101,10 +102,11 @@ pub enum RayDirection {
 
 impl RayDirection {
     fn multiplier(pt: PieceType) -> i8 {
+        use PieceType::*;
         match pt {
-            PieceType::Pawn => 2,
-            PieceType::King | PieceType::Knight => 1,
-            PieceType::Bishop | PieceType::Rook | PieceType::Queen => 8,
+            Pawn => 2,
+            King | Knight => 1,
+            Bishop | Rook | Queen => 8,
         }
     }
 
@@ -127,6 +129,10 @@ impl RayDirection {
         for direction in RayDirection::into_enum_iter() {
             let offset = direction.offset();
             for mult in 1..=RayDirection::multiplier(piece) {
+                if piece == Pawn && mult == 2 {
+                    res.push((mult * offset.0, offset.1));
+                    continue;
+                }
                 res.push((mult * offset.0, mult * offset.1));
             }
         }
@@ -152,6 +158,7 @@ impl Display for Move {
     }
 }
 
+#[derive(Debug)]
 pub struct Moves(pub Vec<Move>);
 impl Display for Moves {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -162,6 +169,12 @@ impl Display for Moves {
             })
             .expect("TODO: panic message");
         Ok(())
+    }
+}
+
+impl From<Vec<Move>> for Moves {
+    fn from(moves: Vec<Move>) -> Self {
+        Moves(moves)
     }
 }
 

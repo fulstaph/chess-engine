@@ -1,9 +1,10 @@
 use crate::board::Board;
 use crate::color::Color;
 use crate::direction::{Move, Moves, MovesFinder};
-use crate::piece::PieceType;
+use crate::piece::{Piece, PieceType};
 use log::debug;
-use std::borrow::Borrow;
+use std::borrow::{Borrow, BorrowMut};
+use std::collections::HashMap;
 
 pub enum Castling {
     Queenside,
@@ -21,7 +22,7 @@ pub struct Position {
 
 impl Position {
     pub fn turn(&self) -> Color {
-        if self.turn % 2 == 0 {
+        if self.turn % 2 == 1 {
             Color::White
         } else {
             Color::Black
@@ -30,16 +31,41 @@ impl Position {
 
     // returns all valid moves
     pub fn moves(&self) -> Moves {
-        let mut moves = vec![];
-
-        let cur_color = self.turn();
+        let current_color = self.turn();
 
         for square in self.board.flattened_iter() {
-            let mut all_possible_moves = MovesFinder::new(*square).list();
-            debug!("all possible moves {}", all_possible_moves);
+            if square.piece.is_none() {
+                continue;
+            }
+
+            let piece = square.piece.unwrap();
+
+            if piece.color != current_color {
+                continue;
+            }
+
+            let mut moves: Moves = MovesFinder::new(*square)
+                .list()
+                .0
+                .iter()
+                .map(|m| Move {
+                    from: *square,
+                    to: self.board[[m.to.file, m.to.rank]],
+                })
+                .filter(|m| {
+                    if m.to.piece.is_none() {
+                        return false;
+                    }
+
+                    piece.color == m.to.piece.unwrap().color
+                })
+                .collect::<Vec<Move>>()
+                .into();
+
+            debug!("piece {} got moves {}", piece, moves);
         }
 
-        Moves(moves)
+        Moves(vec![])
     }
 
     pub fn from_fen(fen: &str) -> Self {
