@@ -3,6 +3,7 @@ use crate::direction::MoveOffset;
 use crate::piece::Piece;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::ops::Add;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
@@ -23,7 +24,7 @@ impl Square {
     }
 
     pub fn get_color(&self) -> Color {
-        if (self.file + self.rank) % 2 == 0 {
+        if (self.file + self.rank) % 2 == 1 {
             Color::White
         } else {
             Color::Black
@@ -50,18 +51,22 @@ impl Square {
 
     pub fn move_to(&self, offset: MoveOffset) -> Option<Self> {
         // check if the resulting square is in board bounds
-        let file = self.file as i8 + offset.0;
-        let rank = self.rank as i8 + offset.1;
-
-        if !(0..8).contains(&file) || !(0..8).contains(&rank) {
+        if !self.can_move_in_direction(offset) {
             return None;
         }
 
         Some(Self {
-            file: file as usize,
-            rank: rank as usize,
+            file: self.file + offset.0 as usize,
+            rank: self.rank + offset.1 as usize,
             piece: None,
         })
+    }
+
+    pub fn can_move_in_direction(&self, offset: MoveOffset) -> bool {
+        let file = self.file as i8 + offset.0;
+        let rank = self.rank as i8 + offset.1;
+
+        (0..8).contains(&file) && (0..8).contains(&rank)
     }
 }
 

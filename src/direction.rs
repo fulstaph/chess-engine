@@ -1,4 +1,6 @@
+use crate::piece::PieceType;
 use crate::square::Square;
+use enum_iterator::IntoEnumIterator;
 use std::fmt::{Display, Formatter};
 
 /// `MovesFinder` returns all possible moves from a given square
@@ -18,11 +20,36 @@ impl MovesFinder {
 
 pub type MoveOffset = (i8, i8);
 
+#[derive(Debug, PartialEq, IntoEnumIterator)]
 pub enum Direction {
     Ray(RayDirection),
     Knight(KnightDirection),
 }
 
+impl Direction {
+    pub fn offsets(sq: &Square) -> Option<Vec<Square>> {
+        let piece = sq.piece?;
+
+        let mut offsets = vec![];
+        if piece.kind == PieceType::Knight {
+            for direction in KnightDirection::into_enum_iter() {
+                if let Some(s) = sq.move_to(direction.offset()) {
+                    offsets.push(s);
+                }
+            }
+        } else {
+            for direction in RayDirection::into_enum_iter() {
+                if let Some(s) = sq.move_to(direction.offset()) {
+                    offsets.push(s);
+                }
+            }
+        }
+
+        Some(offsets)
+    }
+}
+
+#[derive(Debug, PartialEq, IntoEnumIterator)]
 pub enum KnightDirection {
     NorthNorthWest,
     NorthNorthEast,
@@ -50,6 +77,7 @@ impl KnightDirection {
     }
 }
 
+#[derive(Debug, PartialEq, IntoEnumIterator)]
 pub enum RayDirection {
     North,
     NorthEast,
@@ -74,6 +102,10 @@ impl RayDirection {
             West => (0, -1),
             NorthWest => (1, -1),
         }
+    }
+
+    pub fn rays(&self, piece: PieceType) -> Vec<MoveOffset> {
+        vec![]
     }
 }
 

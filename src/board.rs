@@ -32,7 +32,7 @@ impl Board {
             PieceType::Rook,
         ];
 
-        for file in 0..board.inner.len() {
+        for (file, _) in board.inner.into_iter().enumerate() {
             board.inner[FIRST_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::White,
                 kind: first_rank_pieces[file],
@@ -48,7 +48,7 @@ impl Board {
             });
             board.inner[EIGHT_RANK_INDEX][file].piece = Some(Piece {
                 color: Color::Black,
-                kind: first_rank_pieces[first_rank_pieces.len() - file - 1],
+                kind: first_rank_pieces[file],
             });
         }
 
@@ -114,13 +114,17 @@ impl Default for Board {
 impl Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (i, rank) in self.inner.iter().rev().enumerate() {
-            for square in rank {
+            write!(f, "{}", 8 - i).unwrap();
+            for (j, square) in rank.iter().enumerate() {
                 write!(f, "{}", square).expect("TODO: panic message");
             }
 
-            if i != EIGHT_RANK_INDEX {
-                writeln!(f).expect("TODO: panic message");
-            }
+            writeln!(f).expect("TODO: panic message");
+        }
+
+        write!(f, " ").unwrap();
+        for letter in 'a'..='h' {
+            write!(f, "{}", letter).unwrap();
         }
 
         Ok(())
