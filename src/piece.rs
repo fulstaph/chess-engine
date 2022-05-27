@@ -1,27 +1,15 @@
-use crate::board::Board;
 use crate::color::Color;
-use crate::r#move::Move;
-use crate::square::Square;
 use core::fmt::{self, Display};
-use log::{debug, info};
 use std::fmt::Formatter;
 
-#[derive(Debug, Copy, Clone)]
-pub enum Direction {
-    Up,
-    Left,
-    Right,
-    Down,
-}
-
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum PieceType {
-    Pawn,
-    Knight,
-    Bishop,
-    Rook,
-    Queen,
-    King,
+    Pawn = 0,
+    Knight = 1,
+    Bishop = 2,
+    Rook = 3,
+    Queen = 4,
+    King = 5,
 }
 
 impl PieceType {
@@ -33,42 +21,6 @@ impl PieceType {
             PieceType::Rook => 479,
             PieceType::Queen => 929,
             PieceType::King => 60000,
-        }
-    }
-
-    pub fn directions(self) -> Vec<Vec<Direction>> {
-        use Direction::*;
-        use PieceType::*;
-
-        match self {
-            Pawn => vec![vec![Up], vec![Up, Up], vec![Up, Left], vec![Up, Right]],
-            Knight => vec![
-                vec![Up, Up, Left],
-                vec![Up, Up, Right],
-                vec![Left, Left, Up],
-                vec![Left, Left, Down],
-                vec![Right, Right, Up],
-                vec![Right, Right, Down],
-                vec![Down, Down, Right],
-                vec![Down, Down, Left],
-            ],
-            Bishop => vec![
-                vec![Up, Left],
-                vec![Up, Right],
-                vec![Down, Left],
-                vec![Down, Right],
-            ],
-            Rook => vec![vec![Up], vec![Down], vec![Left], vec![Right]],
-            Queen | King => vec![
-                vec![Up],
-                vec![Up, Left],
-                vec![Up, Right],
-                vec![Left],
-                vec![Right],
-                vec![Down],
-                vec![Down, Left],
-                vec![Down, Right],
-            ],
         }
     }
 }
@@ -90,7 +42,7 @@ impl Display for PieceType {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub struct Piece {
     pub kind: PieceType,
     pub color: Color,
@@ -104,99 +56,44 @@ impl Piece {
         }
     }
 
-    /* TODO: passing the whole board and square
-        to a piece is cringe. Use some pattern like Strategy maybe?
-    */
-    pub fn moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        use PieceType::*;
-        match self.kind {
-            Pawn => self.pawn_moves(board, square),
-            Knight => self.knight_moves(board, square),
-            Bishop => self.bishop_moves(board, square),
-            Rook => self.rook_moves(board, square),
-            Queen => self.queen_moves(board, square),
-            King => self.king_moves(board, square),
+    pub fn str(&self) -> &str {
+        match (self.kind, self.color) {
+            (PieceType::Pawn, Color::White) => "\u{2659}",
+            (PieceType::Pawn, Color::Black) => "\u{265F}",
+            (PieceType::Rook, Color::White) => "\u{2656}",
+            (PieceType::Rook, Color::Black) => "\u{265C}",
+            (PieceType::Knight, Color::White) => "\u{2658}",
+            (PieceType::Knight, Color::Black) => "\u{265E}",
+            (PieceType::Bishop, Color::White) => "\u{2657}",
+            (PieceType::Bishop, Color::Black) => "\u{265D}",
+            (PieceType::Queen, Color::White) => "\u{2655}",
+            (PieceType::Queen, Color::Black) => "\u{265B}",
+            (PieceType::King, Color::White) => "\u{2654}",
+            (PieceType::King, Color::Black) => "\u{265A}",
         }
-    }
-
-    fn pawn_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let mut moves = Vec::new();
-        for direction in self.kind.directions() {
-            // only one move up satisfies
-            if direction.len() == 1 {
-                let to_file = if self.color == Color::White {
-                    square.file - 1
-                } else {
-                    square.file + 1
-                };
-
-                let mv = Move {
-                    from: (square.file, square.rank),
-                    to: (to_file, square.rank),
-                };
-                // TODO: check that `to` square isn't occupied
-                moves.push(mv);
-            } else {
-            }
-        }
-        vec![]
-    }
-
-    fn knight_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn bishop_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn rook_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn queen_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
-    }
-
-    fn king_moves(&self, board: &Board, square: &Square) -> Vec<Move> {
-        let directions = self.kind.directions();
-        for direction in directions {}
-        vec![]
     }
 }
 
 impl Display for Piece {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let piece_letter_code = format!("{}", self.kind);
-
-        let _ = write!(
-            f,
-            "{}",
-            if self.color == Color::Black {
-                piece_letter_code.to_lowercase()
-            } else {
-                piece_letter_code
-            }
-        );
-
-        Ok(())
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.str())
     }
+    // fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    //     let piece_letter_code = format!("{}", self.kind);
+    //
+    //     let _ = write!(
+    //         f,
+    //         "{}",
+    //         if self.color == Color::Black {
+    //             piece_letter_code.to_lowercase()
+    //         } else {
+    //             piece_letter_code
+    //         }
+    //     );
+    //
+    //     Ok(())
+    // }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::PieceType;
-
-    #[test]
-    fn piece_move_directions_are_valid() {
-        dbg!(PieceType::Rook.directions());
-    }
-}
+mod tests {}
