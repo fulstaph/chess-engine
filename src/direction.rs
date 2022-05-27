@@ -2,7 +2,10 @@ use crate::piece::PieceType;
 use crate::piece::PieceType::Pawn;
 use crate::square::Square;
 use enum_iterator::IntoEnumIterator;
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    vec,
+};
 
 /// `MovesFinder` returns all possible moves from a given square
 pub struct MovesFinder {
@@ -101,6 +104,18 @@ pub enum RayDirection {
 }
 
 impl RayDirection {
+    fn piece_directions(pt: PieceType) -> Vec<RayDirection> {
+        use PieceType::*;
+        use RayDirection::*;
+        match pt {
+            Pawn => vec![North, NorthEast, NorthWest],
+            Knight => vec![],
+            Bishop => vec![NorthEast, SouthEast, SouthWest, NorthWest],
+            Rook => vec![North, East, South, West],
+            Queen | King => RayDirection::into_enum_iter().collect(),
+        }
+    }
+
     fn multiplier(pt: PieceType) -> i8 {
         use PieceType::*;
         match pt {
@@ -126,7 +141,7 @@ impl RayDirection {
 
     pub fn rays(piece: PieceType) -> Vec<MoveOffset> {
         let mut res = vec![];
-        for direction in RayDirection::into_enum_iter() {
+        for direction in RayDirection::piece_directions(piece) {
             let offset = direction.offset();
             for mult in 1..=RayDirection::multiplier(piece) {
                 if piece == Pawn && mult == 2 {
@@ -145,6 +160,14 @@ impl RayDirection {
 pub struct Move {
     pub from: Square,
     pub to: Square,
+}
+
+impl Move {
+    pub fn is_diagonal(&self) -> bool {
+        (self.from.rank as i8 - self.to.rank as i8)
+            .abs()
+            .is_positive()
+    }
 }
 
 impl Display for Move {
@@ -180,6 +203,10 @@ impl From<Vec<Move>> for Moves {
 
 #[cfg(test)]
 mod test {
+    use crate::square::Square;
+
+    use super::Move;
+
     // TODO: refactor to use table driven testing here.
     #[test]
     fn pawn_move_directions_are_correct() {}
@@ -198,4 +225,21 @@ mod test {
 
     #[test]
     fn bishop_move_directions_are_correct() {}
+
+    #[test]
+    fn correctly_identifying_diagonal_move() {
+        let mv = Move {
+            from: Square {
+                file: 0,
+                rank: 0,
+                piece: None,
+            },
+            to: Square {
+                file: 1,
+                rank: 1,
+                piece: None,
+            },
+        };
+        assert!(mv.is_diagonal());
+    }
 }

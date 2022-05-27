@@ -1,9 +1,9 @@
 use crate::color::Color;
 use crate::direction::MoveOffset;
 use crate::piece::Piece;
-use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::Add;
+use std::{char, fmt};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Square {
@@ -21,6 +21,33 @@ impl PartialEq for Square {
 impl Square {
     pub fn new(file: usize, rank: usize, piece: Option<Piece>) -> Self {
         Square { piece, file, rank }
+    }
+
+    pub fn from_str(square: String) -> Option<Square> {
+        if square.is_empty() || square.len() > 2 {
+            return None;
+        }
+
+        let chars = square.chars().collect();
+
+        let rank = square.chars().collect::<_>()[0];
+        let file = chars[1];
+
+        Some(Square {
+            file: file - 1,
+            rank: match rank {
+                'a' => 0,
+                'b' => 1,
+                'c' => 2,
+                'd' => 3,
+                'e' => 4,
+                'f' => 5,
+                'g' => 6,
+                'h' => 7,
+                _ => 8,
+            },
+            piece: None,
+        })
     }
 
     pub fn get_color(&self) -> Color {

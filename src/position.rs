@@ -52,6 +52,8 @@ impl Position {
                     from: *square,
                     to: self.board[[m.to.file, m.to.rank]],
                 })
+                .collect::<Vec<Move>>()
+                .into_iter()
                 .filter(|m| {
                     if m.to.piece.is_none() {
                         return false;
@@ -59,10 +61,37 @@ impl Position {
 
                     piece.color == m.to.piece.unwrap().color
                 })
+                // .filter(|mv| {
+                //     if piece.kind == PieceType::Pawn && mv.is_diagonal() && mv.to.piece.is_none() {
+                //         return true;
+                //     }
+                //     false
+                // })
                 .collect::<Vec<Move>>()
                 .into();
 
             debug!("piece {} got moves {}", piece, moves);
+
+            moves.0.retain(|mv| match piece.kind {
+                PieceType::Pawn => {
+                    if mv.is_diagonal() && mv.to.piece.is_none() {
+                        return false;
+                    }
+
+                    if mv.from.file != 1 && (mv.from.file as i8 - mv.to.file as i8).abs() == 2 {
+                        return false;
+                    }
+
+                    true
+                }
+                PieceType::Knight => true,
+                PieceType::Bishop => true,
+                PieceType::Rook => true,
+                PieceType::Queen => true,
+                PieceType::King => true,
+            });
+
+            // debug!("piece {} after filtering got moves {}", piece, moves);
         }
 
         Moves(vec![])
