@@ -36,6 +36,7 @@ impl Position {
 
         for square in self.board.flattened_iter() {
             let mut all_possible_moves = MovesFinder::new(*square).list();
+            debug!("all possible moves {}", all_possible_moves);
         }
 
         Moves(moves)

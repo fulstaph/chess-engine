@@ -10,7 +10,17 @@ pub struct MovesFinder {
 
 impl MovesFinder {
     pub fn list(&self) -> Moves {
-        Moves(Vec::new())
+        let mut moves = vec![];
+        if let Some(offsets) = Direction::offsets(self.from) {
+            for offset in offsets {
+                moves.push(Move {
+                    from: self.from,
+                    to: offset,
+                })
+            }
+        }
+
+        Moves(moves)
     }
 
     pub fn new(from: Square) -> Self {
@@ -27,7 +37,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn offsets(sq: &Square) -> Option<Vec<Square>> {
+    pub fn offsets(sq: Square) -> Option<Vec<Square>> {
         let piece = sq.piece?;
 
         let mut offsets = vec![];
@@ -38,8 +48,8 @@ impl Direction {
                 }
             }
         } else {
-            for direction in RayDirection::into_enum_iter() {
-                if let Some(s) = sq.move_to(direction.offset()) {
+            for offset in RayDirection::rays(piece.kind) {
+                if let Some(s) = sq.move_to(offset) {
                     offsets.push(s);
                 }
             }
@@ -90,6 +100,14 @@ pub enum RayDirection {
 }
 
 impl RayDirection {
+    fn multiplier(pt: PieceType) -> i8 {
+        match pt {
+            PieceType::Pawn => 2,
+            PieceType::King | PieceType::Knight => 1,
+            PieceType::Bishop | PieceType::Rook | PieceType::Queen => 8,
+        }
+    }
+
     fn offset(&self) -> MoveOffset {
         use RayDirection::*;
         match self {
@@ -104,8 +122,16 @@ impl RayDirection {
         }
     }
 
-    pub fn rays(&self, piece: PieceType) -> Vec<MoveOffset> {
-        vec![]
+    pub fn rays(piece: PieceType) -> Vec<MoveOffset> {
+        let mut res = vec![];
+        for direction in RayDirection::into_enum_iter() {
+            let offset = direction.offset();
+            for mult in 1..=RayDirection::multiplier(piece) {
+                res.push((mult * offset.0, mult * offset.1));
+            }
+        }
+
+        res
     }
 }
 
